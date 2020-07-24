@@ -7,18 +7,17 @@ Incorporate libRoadrunner and SBML models into the COVID19 model (https://github
 * Run `make` (may need to edit the paths for `LIBRR_DIR` and `LIBRR_CFLAGS`)
 
 ### macOS
-NOTE (currently): since the libroadrunner binary libs are built for native macOS (i.e., built with clang, not gcc), we need to use clang++ here. And since Apple's clang++ doesn't support OpenMP (at least up to `Apple clang version 11.x`), one would need to install and use a clang-compatible OpenMP lib, e.g. via `brew install libomp`.
-Then, for example, we can compile on macOS:
+The Makefile has been tested on macOS (10.14.6 at least; both the OpenMP-capable g++ from brew (Makefile) and the native clang++ (Make-clang)):
 ```
 ~/git/covid19_v3.2_sbml/COVID19-0.3.2-sbml/PhysiCell$ make
-clang++ -march=native  -fomit-frame-pointer -Xpreprocessor -fopenmp -m64 -std=c++11 -D LIBROADRUNNER  -I/Users/heiland/libroadrunner/roadrunner-osx-10.9-cp36m/include/rr/C  -c ./BioFVM/BioFVM_vector.cpp 
+g++-9 -march=native  -g  -fomit-frame-pointer -fopenmp -m64 -std=c++11 -D LIBROADRUNNER  -I/Users/heiland/libroadrunner/roadrunner-osx-10.9-cp36m/include/rr/C  -c ./BioFVM/BioFVM_vector.cpp 
 ...
-clang++ -march=native  -fomit-frame-pointer -Xpreprocessor -fopenmp -m64 -std=c++11 -D LIBROADRUNNER  -I/Users/heiland/libroadrunner/roadrunner-osx-10.9-cp36m/include/rr/C  -c ./custom_modules/epithelium_submodel.cpp 
+g++-9 -march=native  -g  -fomit-frame-pointer -fopenmp -m64 -std=c++11 -D LIBROADRUNNER  -I/Users/heiland/libroadrunner/roadrunner-osx-10.9-cp36m/include/rr/C  -c ./custom_modules/epithelium_submodel.cpp 
 Your OS= -D OSX -D IA32
 LIBRR_CFLAGS= -I/Users/heiland/libroadrunner/roadrunner-osx-10.9-cp36m/include/rr/C
 LIBRR_LIBS= /Users/heiland/libroadrunner/roadrunner-osx-10.9-cp36m/lib
 
-clang++ -march=native  -fomit-frame-pointer -Xpreprocessor -fopenmp -m64 -std=c++11 -D LIBROADRUNNER  -I/Users/heiland/libroadrunner/roadrunner-osx-10.9-cp36m/include/rr/C  -L/usr/local/opt/libomp/lib -lomp -o COVID19_sbml BioFVM_vector.o BioFVM_mesh.o BioFVM_microenvironment.o BioFVM_solvers.o BioFVM_matlab.o BioFVM_utilities.o BioFVM_basic_agent.o BioFVM_MultiCellDS.o BioFVM_agent_container.o   pugixml.o PhysiCell_phenotype.o PhysiCell_cell_container.o PhysiCell_standard_models.o PhysiCell_cell.o PhysiCell_custom.o PhysiCell_utilities.o PhysiCell_constants.o  PhysiCell_SVG.o PhysiCell_pathology.o PhysiCell_MultiCellDS.o PhysiCell_various_outputs.o PhysiCell_pugixml.o PhysiCell_settings.o custom.o submodel_data_structures.o internal_viral_dynamics.o internal_viral_response.o receptor_dynamics.o immune_submodels.o epithelium_submodel.o main.cpp -L/Users/heiland/libroadrunner/roadrunner-osx-10.9-cp36m/lib -lroadrunner_c_api
+g++-9 -march=native  -g  -fomit-frame-pointer -fopenmp -m64 -std=c++11 -D LIBROADRUNNER  -I/Users/heiland/libroadrunner/roadrunner-osx-10.9-cp36m/include/rr/C   -o COVID19_sbml BioFVM_vector.o BioFVM_mesh.o BioFVM_microenvironment.o BioFVM_solvers.o BioFVM_matlab.o BioFVM_utilities.o BioFVM_basic_agent.o BioFVM_MultiCellDS.o BioFVM_agent_container.o   pugixml.o PhysiCell_phenotype.o PhysiCell_cell_container.o PhysiCell_standard_models.o PhysiCell_cell.o PhysiCell_custom.o PhysiCell_utilities.o PhysiCell_constants.o  PhysiCell_SVG.o PhysiCell_pathology.o PhysiCell_MultiCellDS.o PhysiCell_various_outputs.o PhysiCell_pugixml.o PhysiCell_settings.o custom.o submodel_data_structures.o internal_viral_dynamics.o internal_viral_response.o receptor_dynamics.o immune_submodels.o epithelium_submodel.o main.cpp -L/Users/heiland/libroadrunner/roadrunner-osx-10.9-cp36m/lib -lroadrunner_c_api
 
 created COVID19_sbml
 ```
