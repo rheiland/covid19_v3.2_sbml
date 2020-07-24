@@ -97,7 +97,7 @@
 	</overall>
 	
 	<parallel>
-		<omp_num_threads>6</omp_num_threads>
+		<omp_num_threads>1</omp_num_threads>
 	</parallel> 
 
 	<options>
@@ -123,6 +123,24 @@
 	</save>
 	
 	<microenvironment_setup>
+		<variable name="oxygen" units="dimensionless" ID="0">
+			<physical_parameter_set>
+				<diffusion_coefficient units="micron^2/min">0</diffusion_coefficient>
+				<decay_rate units="1/min">0</decay_rate>  
+			</physical_parameter_set>
+			<initial_condition units="mmHg">38</initial_condition>
+			<Dirichlet_boundary_condition units="mmHg" enabled="true">38</Dirichlet_boundary_condition>
+		</variable>
+		
+		<variable name="glucose" units="dimensionless" ID="1">
+			<physical_parameter_set>
+				<diffusion_coefficient units="micron^2/min">0</diffusion_coefficient>
+				<decay_rate units="1/min">0</decay_rate>  
+			</physical_parameter_set>
+			<initial_condition units="mmHg">13</initial_condition>
+			<Dirichlet_boundary_condition units="mmHg" enabled="true">13</Dirichlet_boundary_condition>
+		</variable>
+
 		<variable name="virion" units="virion/micron^3" ID="0">
 			<physical_parameter_set>
 				<diffusion_coefficient units="micron^2/min">2.5</diffusion_coefficient> <!-- 10 --> 
@@ -302,6 +320,10 @@
 				<molecular />
 			</phenotype>
 			<custom_data>  
+				<!-- for SBML -->
+				<energy units="dimensionless" type="double"
+					description="energy from SBML model">0.0</energy>
+
 				<!-- for internal viral dynamics --> 
 				<virion units="virions" type="double"
 					description="endocytosed virions">0</virion>

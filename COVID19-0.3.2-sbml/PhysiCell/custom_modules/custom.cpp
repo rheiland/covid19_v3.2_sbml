@@ -67,6 +67,12 @@
 
 #include "./custom.h"
 
+int oxygen_substrate_idx; 
+int glucose_substrate_idx; 
+int energy_cell_idx; 
+int ingest_oxy_cell_idx;
+int ingest_glu_cell_idx;
+
 void create_cell_types( void )
 {
 	// set the random seed 
@@ -96,6 +102,13 @@ void create_cell_types( void )
 	*/
 	
 	initialize_cell_definitions_from_pugixml(); 
+
+	// SBML-related
+	energy_cell_idx = cell_defaults.custom_data.find_variable_index( "energy" ); 
+	// energy_cell_idx = cell_defaults->custom_data.find_variable_index( name );
+	// energy_cell_idx = pCD->custom_data.find_variable_index( name );
+	std::cout << "\n\n-------- create_cell_types():  energy_cell_idx = " << energy_cell_idx << std::endl;
+
 
 	/* 
 	   Put any modifications to individual cell definitions here. 
@@ -131,7 +144,7 @@ void create_cell_types( void )
 #ifdef LIBROADRUNNER
 	std::cerr << "------------->>>>>  Creating rrHandle, loadSBML file\n\n";
 	// std::cerr << "------------->>>>>  SBML file = " << cell_type_param.sbml_filename << std::endl;
-	std::cerr << "------------->>>>>  SBML file = " << get_cell_definition("celltype1").sbml_filename << std::endl;
+	std::cerr << "------------->>>>>  SBML file = " << get_cell_definition("lung epithelium").sbml_filename << std::endl;
 	rrc::RRHandle rrHandle = createRRInstance();
 	// cell_defaults.phenotype.motility.persistence_time = parameters.doubles("persistence_time"); 
 	// if (!rrc::loadSBML (rrHandle, "../Toy_Model_for_PhysiCell_1.xml")) {
@@ -188,18 +201,61 @@ void setup_microenvironment( void )
 	// initialize BioFVM 
 	
 	initialize_microenvironment(); 	
+
+	// used by SBML model
+	oxygen_substrate_idx = microenvironment.find_density_index( "oxygen" ); 
+	glucose_substrate_idx = microenvironment.find_density_index( "glucose" ); 
+	std::cout << "---------- setup_microenvironment() -----------\n";
+	std::cout << "    oxygen_substrate_idx = " << oxygen_substrate_idx << std::endl;
+	std::cout << "    glucose_substrate_idx = " << glucose_substrate_idx << std::endl;
 	
 	return; 
 }
 
-void setup_tissue( void )
+void assign_SBML_model( Cell* pC )
 {
 #ifdef LIBROADRUNNER
 	// extern SBMLDocument_t *sbml_doc;
 	rrc::RRVectorPtr vptr;
     rrc::RRCDataPtr result;  // start time, end time, and number of points
-#endif
 
+	std::cerr << "------------->>>>>  Creating rrHandle, loadSBML file\n\n";
+	// std::cerr << "------------->>>>>  SBML file = " << cell_type_param.sbml_filename << std::endl;
+	std::cerr << "------------->>>>>  SBML file = " << get_cell_definition("lung epithelium").sbml_filename << std::endl;
+	rrc::RRHandle rrHandle = createRRInstance();
+	// cell_defaults.phenotype.motility.persistence_time = parameters.doubles("persistence_time"); 
+	// if (!rrc::loadSBML (rrHandle, "../Toy_Model_for_PhysiCell_1.xml")) {
+	if (!rrc::loadSBML (rrHandle, get_cell_definition("lung epithelium").sbml_filename.c_str())) {
+		std::cerr << "------------->>>>>  Error while loading SBML file  <-------------\n\n";
+	// 	printf ("Error message: %s\n", getLastError());
+	// 	getchar ();
+	// 	exit (0);
+	}
+	pC->phenotype.molecular.model_rr = rrHandle;  // assign the intracellular model to each cell
+	int r = rrc::getNumberOfReactions(rrHandle);
+	int m = rrc::getNumberOfFloatingSpecies(rrHandle);
+	int b = rrc::getNumberOfBoundarySpecies(rrHandle);
+	int p = rrc::getNumberOfGlobalParameters(rrHandle);
+	int c = rrc::getNumberOfCompartments(rrHandle);
+
+	std::cerr << "Number of reactions = " << r << std::endl;
+	std::cerr << "Number of floating species = " << m << std::endl;  // 4
+	std::cerr << "Number of boundary species = " << b << std::endl;  // 0
+	std::cerr << "Number of compartments = " << c << std::endl;  // 1
+
+	std::cerr << "Floating species names:\n";
+	std::cerr << "-----------------------\n";
+	std::cerr << stringArrayToString(rrc::getFloatingSpeciesIds(rrHandle)) <<"\n"<< std::endl;
+
+	vptr = rrc::getFloatingSpeciesConcentrations(rrHandle);
+	std::cerr << vptr->Count << std::endl;
+	for (int kdx=0; kdx<vptr->Count; kdx++)
+		std::cerr << kdx << ") " << vptr->Data[kdx] << std::endl;
+#endif
+}
+
+void setup_tissue( void )
+{
 	static int nV = microenvironment.find_density_index( "virion" ); 
 	
 	choose_initialized_voxels();
@@ -237,8 +293,12 @@ void setup_tissue( void )
 	{
 		while( x < x_max )
 		{
-			pC = create_cell( get_cell_definition("lung epithelium" ) ); 
+			pC = create_cell( get_cell_definition("lung epithelium" ) );  // pC->type = 1
 			pC->assign_position( x,y, 0.0 );
+
+#ifdef LIBROADRUNNER
+			assign_SBML_model( pC );
+#endif
 			
 			double dx = x - center_x;
 			double dy = y - center_y; 
@@ -720,5 +780,3 @@ void SVG_plot_virus( std::string filename , Microenvironment& M, double z_slice 
  
 	return; 
 }
-
-

@@ -77,6 +77,8 @@
 
 #include "../modules/PhysiCell_settings.h"
 
+#include "../intracellular/PhysiCell_intracellular.h"
+
 using namespace BioFVM; 
 
 namespace PhysiCell{
@@ -506,6 +508,10 @@ class Molecular
 		// predatory cell when ingested 
 		std::vector<double> fraction_transferred_when_ingested; 
 		
+#ifdef LIBROADRUNNER
+		rrc::RRHandle model_rr;  // SBML, libRoadrunner
+#endif
+
 		/* prototyping / beta in 1.5.0 */ 
 		// Boolean, Integer, and Double parameters
 /*		
