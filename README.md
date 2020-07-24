@@ -68,4 +68,55 @@ See ALL_CITATIONS.txt for this list.
 current simulated time: 0 min (max: 8640 min)
 total agents: 2843
 ...
+```
+for each epithelial cell, we associate the SBML model:
+```
+
+------------->>>>>  Creating rrHandle, loadSBML file
+
+------------->>>>>  SBML file = ./config/Toy_SBML_Model_1.xml
+Number of reactions = 3
+Number of floating species = 4
+Number of boundary species = 0
+Number of compartments = 1
+Floating species names:
+-----------------------
+Energy Glucose Hydrogen Oxygen
+
+4
+0) 5
+1) 32
+2) 0
+3) 38
+...
+```
+for each phenotype time step, we solve the SBML model for an epi cell:
+```
+------ energy_based_cell_phenotype() ------
+--- before updating:  vptr =0x7feb82f69c20
+---   			vptr->Count =4
+0, 0.899231
+1, 3.83664e-31
+2, 0.205266
+3, 25.2053
+--- after updating oxygen:
+0, 0.899231
+1, 3.83664e-31
+2, 0.205266
+3, 25.2053
+oxy_val at voxel of cell = 38
+glucose_val at voxel of cell = 13
+time           [Energy]       [Glucose]      [Hydrogen]     [Oxygen]       
+0              0.899231       13             0.205266       38             
+1.11111        10.0036        -3.67679e-14   0.410533       25.2053        
+2.22222        7.16787        -8.11277e-19   0.410533       25.2053        
+3.33333        5.136          3.59494e-21    0.410533       25.2053        
+4.44444        3.68009        -7.0291e-22    0.410533       25.2053        
+5.55556        2.63688        -1.93651e-25   0.410533       25.2053        
+6.66667        1.88941        -3.93471e-27   0.410533       25.2053        
+7.77778        1.35382        1.22949e-29    0.410533       25.2053        
+8.88889        0.970049       6.64715e-30    0.410533       25.2053        
+10             0.695071       7.42679e-31    0.410533       25.2053        
+Saving last energy value (cell custom var) = 0.695071
+...
 ``` 
