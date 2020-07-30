@@ -35,7 +35,7 @@ ARCH := native # best auto-tuning
 # CFLAGS := -march=$(ARCH) -Ofast -s -fomit-frame-pointer -mfpmath=both -fopenmp -m64 -std=c++11
 # CFLAGS := -march=$(ARCH) -O3 -fomit-frame-pointer -mfpmath=both -fopenmp -m64 -std=c++11 
 # CFLAGS := -march=$(ARCH) -g  -fomit-frame-pointer -Xpreprocessor -fopenmp -m64 -std=c++11 -D LIBROADRUNNER 
-CFLAGS := -march=$(ARCH) -g  -fomit-frame-pointer -Xpreprocessor -fopenmp -m64 -std=c++11 -D LIBROADRUNNER 
+CFLAGS := -march=$(ARCH) -g  -fomit-frame-pointer -fopenmp -m64 -std=c++11 -D LIBROADRUNNER 
 # CFLAGS := -march=$(ARCH) -fomit-frame-pointer -Xpreprocessor -fopenmp -m64 -std=c++11 -D LIBROADRUNNER 
 
 # OSX
@@ -44,8 +44,8 @@ OMP_INCLUDE := -I $(BREW_HOME)/include
 PATH_TO_OMP := -L/opt/local/lib/libomp
 OMP_LIB := $(PATH_TO_OMP) -lomp
 
-LIBRR_DIR := /Users/pablo/libroadrunner/roadrunner-osx-10.9-cp36m
-LIBRR_LIBS := /Users/pablo/libroadrunner/roadrunner-osx-10.9-cp36m/lib
+LIBRR_DIR := $(HOME)/libroadrunner/roadrunner-osx-10.9-cp36m
+LIBRR_LIBS := $(HOME)/libroadrunner/roadrunner-osx-10.9-cp36m/lib
 
 OSFLAG 	:=
 ifeq ($(OS),Windows_NT)
@@ -78,6 +78,7 @@ else
 		LIBRR_DIR := $(HOME)/libroadrunner/roadrunner-osx-10.9-cp36m
 		LIBRR_CFLAGS := -I${LIBRR_DIR}/include/rr/C
 		LIBRR_LIBS := ${LIBRR_DIR}/lib
+	        CFLAGS := -march=$(ARCH) -g -fomit-frame-pointer -Xpreprocessor -fopenmp -m64 -std=c++11 -D LIBROADRUNNER
 	endif
 		UNAME_P := $(shell uname -p)
 	ifeq ($(UNAME_P),x86_64)
