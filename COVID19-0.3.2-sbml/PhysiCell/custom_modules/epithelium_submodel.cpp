@@ -11,17 +11,28 @@ extern int energy_cell_idx;
 
 void epithelium_contact_function( Cell* pC1, Phenotype& p1, Cell* pC2, Phenotype& p2, double dt )
 {
-	// elastic adhesions 
+	// elastic adhesions
 	standard_elastic_contact_function( pC1,p1, pC2, p2, dt );
-	
-	return; 
+	return;
+}
+
+int find_species_id_index_or_die(rrc::RRStringArrayPtr ids, const char* id)
+{
+        for (int i = 0; i < ids->Count; ++i) {
+          if (strcmp(id, ids->String[i]) == 0) {
+            printf("id of %s is%i \n", id, i);
+            return i;
+          }
+        }
+        std::cerr << "Could not find id in species: " << id << std::endl;
+        exit(1);
 }
 
 void energy_based_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt)
 {
-	// (hard-coded, now) SBML species indices: glucose, hydrogen (unused here), oxygen
-	static int idx_glucose = 1;
-	static int idx_oxygen = 3;
+        rrc::RRStringArrayPtr ids = rrc::getFloatingSpeciesIds(pCell->phenotype.molecular.model_rr);
+        static int idx_glucose = (find_species_id_index_or_die(ids, "Glucose"));
+        static int idx_oxygen = (find_species_id_index_or_die(ids, "Oxygen"));
 
 	if (pCell->type != 1)
 		return;
