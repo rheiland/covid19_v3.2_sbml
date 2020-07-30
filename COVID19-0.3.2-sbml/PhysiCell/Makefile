@@ -35,20 +35,22 @@ ARCH := native # best auto-tuning
 # CFLAGS := -march=$(ARCH) -Ofast -s -fomit-frame-pointer -mfpmath=both -fopenmp -m64 -std=c++11
 # CFLAGS := -march=$(ARCH) -O3 -fomit-frame-pointer -mfpmath=both -fopenmp -m64 -std=c++11 
 # CFLAGS := -march=$(ARCH) -g  -fomit-frame-pointer -Xpreprocessor -fopenmp -m64 -std=c++11 -D LIBROADRUNNER 
-CFLAGS := -march=$(ARCH) -g  -fomit-frame-pointer -fopenmp -m64 -std=c++11 -D LIBROADRUNNER 
+CFLAGS := -march=$(ARCH) -g  -fomit-frame-pointer -Xpreprocessor -fopenmp -m64 -std=c++11 -D LIBROADRUNNER 
 # CFLAGS := -march=$(ARCH) -fomit-frame-pointer -Xpreprocessor -fopenmp -m64 -std=c++11 -D LIBROADRUNNER 
 
 # OSX
-#PATH_TO_OMP := -L/usr/local/opt/libomp/lib
-#OMP_LIB := $(PATH_TO_OMP) -lomp
+BREW_HOME := $(HOME)/brew
+OMP_INCLUDE := -I $(BREW_HOME)/include
+PATH_TO_OMP := -L/opt/local/lib/libomp
+OMP_LIB := $(PATH_TO_OMP) -lomp
 
-#LIBRR_DIR := /Users/heiland/libroadrunner/roadrunner-osx-10.9-cp36m
-#LIBRR_LIBS := /home/heiland/libroadrunner/cpplibroadrunner-1.3.0-linux_x86_64/lib
+LIBRR_DIR := /Users/pablo/libroadrunner/roadrunner-osx-10.9-cp36m
+LIBRR_LIBS := /Users/pablo/libroadrunner/roadrunner-osx-10.9-cp36m/lib
 
 OSFLAG 	:=
 ifeq ($(OS),Windows_NT)
 	OSFLAG += -D WIN32
-	OMP_LIB := 
+	OMP_LIB :=
 	LIBRR_DIR := C:\Users\heiland\libroadrunner\roadrunner-win64-vs14-cp35m
 	LIBRR_LIBS := C:\Users\heiland\libroadrunner\roadrunner-win64-vs14-cp35m/bin
 	LIBRR_CFLAGS := -I${LIBRR_DIR}/include/rr/C
@@ -93,8 +95,8 @@ else
 	endif
 endif
 
-#COMPILE_COMMAND := $(CC) $(CFLAGS) 
-COMPILE_COMMAND := $(CC) $(CFLAGS) $(LIBRR_CFLAGS) 
+#COMPILE_COMMAND := $(CC) $(CFLAGS)
+COMPILE_COMMAND := $(CC) $(CFLAGS) $(LIBRR_CFLAGS) $(OMP_INCLUDE)
 
 BioFVM_OBJECTS := BioFVM_vector.o BioFVM_mesh.o BioFVM_microenvironment.o BioFVM_solvers.o BioFVM_matlab.o \
 BioFVM_utilities.o BioFVM_basic_agent.o BioFVM_MultiCellDS.o BioFVM_agent_container.o 
