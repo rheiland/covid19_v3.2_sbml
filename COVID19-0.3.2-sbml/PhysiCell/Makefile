@@ -3,40 +3,20 @@ PROGRAM_NAME := COVID19_sbml
 
 CC := g++
 # CC := g++-mp-7 # typical macports compiler name
-# CC := g++-7 # typical homebrew compiler name 
+# CC := g++-7 # typical homebrew compiler name
+# CC := clang++ # if libroadrunner macOS version requires it
 
-# Check for environment definitions of compiler 
+# Check for environment definitions of compiler
 # e.g., on CC = g++-7 on OSX
-ifdef PHYSICELL_CPP 
+ifdef PHYSICELL_CPP
 	CC := $(PHYSICELL_CPP)
 endif
 
-# override with clang++ due to libRoadrunner macOS version relying on it
-#CC := clang++
-
-ARCH := native # best auto-tuning 
-# ARCH := core2 # a reasonably safe default for most CPUs since 2007
-# ARCH := corei7
-# ARCH := corei7-avx # earlier i7 
-# ARCH := core-avx-i # i7 ivy bridge or newer 
-# ARCH := core-avx2 # i7 with Haswell or newer
-# ARCH := nehalem
-# ARCH := westmere
-# ARCH := sandybridge # circa 2011
-# ARCH := ivybridge   # circa 2012
-# ARCH := haswell     # circa 2013
-# ARCH := broadwell   # circa 2014
-# ARCH := skylake     # circa 2015
-# ARCH := bonnell
-# ARCH := silvermont
-# ARCH := skylake-avx512
-# ARCH := nocona #64-bit pentium 4 or later 
-
-# CFLAGS := -march=$(ARCH) -Ofast -s -fomit-frame-pointer -mfpmath=both -fopenmp -m64 -std=c++11
-# CFLAGS := -march=$(ARCH) -O3 -fomit-frame-pointer -mfpmath=both -fopenmp -m64 -std=c++11 
-# CFLAGS := -march=$(ARCH) -g  -fomit-frame-pointer -Xpreprocessor -fopenmp -m64 -std=c++11 -D LIBROADRUNNER 
-CFLAGS := -march=$(ARCH) -g  -fomit-frame-pointer -fopenmp -m64 -std=c++11 -D LIBROADRUNNER 
-# CFLAGS := -march=$(ARCH) -fomit-frame-pointer -Xpreprocessor -fopenmp -m64 -std=c++11 -D LIBROADRUNNER 
+CFLAGS := -fomit-frame-pointer -m64 -std=c++11 -D LIBROADRUNNER
+# Cheat sheet:
+#   -Ofast -s -mfpmath=both
+#   -O3
+#   -g
 
 # OSX
 BREW_HOME := $(HOME)/brew
@@ -46,15 +26,13 @@ OMP_LIB := $(PATH_TO_OMP) -lomp
 
 LIBRR_DIR := $(HOME)/libroadrunner/roadrunner-osx-10.9-cp36m
 LIBRR_LIBS := $(HOME)/libroadrunner/roadrunner-osx-10.9-cp36m/lib
+LIBRR_CFLAGS := -I${LIBRR_DIR}/include/rr/C
 
-OSFLAG 	:=
+OSFLAG :=
 ifeq ($(OS),Windows_NT)
 	OSFLAG += -D WIN32
-	OMP_LIB :=
-	LIBRR_DIR := C:\Users\heiland\libroadrunner\roadrunner-win64-vs14-cp35m
-	LIBRR_LIBS := C:\Users\heiland\libroadrunner\roadrunner-win64-vs14-cp35m/bin
-	LIBRR_CFLAGS := -I${LIBRR_DIR}/include/rr/C
-	CFLAGS := -march=$(ARCH) -fomit-frame-pointer -fopenmp -m64 -std=c++11 -D LIBROADRUNNER 
+	LIBRR_LIBS := $(LIBRR_DIR)/bin
+	CFLAGS := $(CFLAGS) -fopenmp
 	ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
 		OSFLAG += -D AMD64
 	endif
@@ -65,28 +43,17 @@ else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
 		OSFLAG += -D LINUX
+		CFLAGS := $(CFLAGS) -fopenmp
 		OMP_LIB :=
-		LIBRR_DIR := $(HOME)/libroadrunner/libroadrunner
-		LIBRR_CFLAGS := -I${LIBRR_DIR}/include/rr/C
-		LIBRR_LIBS := ${LIBRR_DIR}/lib
-		# CFLAGS := -march=$(ARCH) -g  -fomit-frame-pointer -fopenmp -m64 -std=c++11 -D LIBROADRUNNER 
-		CFLAGS := -march=$(ARCH) -fomit-frame-pointer -m64 -std=c++11 -D LIBROADRUNNER 
 	endif
 	ifeq ($(UNAME_S),Darwin)
-#		CC := clang++
 		OSFLAG += -D OSX
-		LIBRR_DIR := $(HOME)/libroadrunner/roadrunner-osx-10.9-cp36m
-		LIBRR_CFLAGS := -I${LIBRR_DIR}/include/rr/C
-		LIBRR_LIBS := ${LIBRR_DIR}/lib
-	        CFLAGS := -march=$(ARCH) -g -fomit-frame-pointer -Xpreprocessor -fopenmp -m64 -std=c++11 -D LIBROADRUNNER
+	        CFLAGS := $(CFLAGS) -Xpreprocessor -fopenmp
 	endif
 		UNAME_P := $(shell uname -p)
 	ifeq ($(UNAME_P),x86_64)
 		OSFLAG += -D AMD64
-		LIBRR_DIR := $(HOME)/libroadrunner/libroadrunner
-		LIBRR_CFLAGS := -I${LIBRR_DIR}/include/rr/C
-		# CFLAGS := -march=$(ARCH) -fomit-frame-pointer -fopenmp -m64 -std=c++11 -D LIBROADRUNNER 
-		CFLAGS := -march=$(ARCH) -fomit-frame-pointer -fopenmp -m64 -std=c++11 -D LIBROADRUNNER 
+	        CFLAGS := $(CFLAGS) -fopenmp
 	endif
 		ifneq ($(filter %86,$(UNAME_P)),)
 	OSFLAG += -D IA32
@@ -96,103 +63,98 @@ else
 	endif
 endif
 
-#COMPILE_COMMAND := $(CC) $(CFLAGS)
 COMPILE_COMMAND := $(CC) $(CFLAGS) $(LIBRR_CFLAGS) $(OMP_INCLUDE)
 
 BioFVM_OBJECTS := BioFVM_vector.o BioFVM_mesh.o BioFVM_microenvironment.o BioFVM_solvers.o BioFVM_matlab.o \
-BioFVM_utilities.o BioFVM_basic_agent.o BioFVM_MultiCellDS.o BioFVM_agent_container.o 
+BioFVM_utilities.o BioFVM_basic_agent.o BioFVM_MultiCellDS.o BioFVM_agent_container.o
 
 PhysiCell_core_OBJECTS := PhysiCell_phenotype.o PhysiCell_cell_container.o PhysiCell_standard_models.o \
-PhysiCell_cell.o PhysiCell_custom.o PhysiCell_utilities.o PhysiCell_constants.o 
+PhysiCell_cell.o PhysiCell_custom.o PhysiCell_utilities.o PhysiCell_constants.o
 
-PhysiCell_module_OBJECTS := PhysiCell_SVG.o PhysiCell_pathology.o PhysiCell_MultiCellDS.o PhysiCell_various_outputs.o \
-PhysiCell_pugixml.o PhysiCell_settings.o
+PhysiCell_module_OBJECTS := PhysiCell_SVG.o PhysiCell_pathology.o PhysiCell_MultiCellDS.o \
+PhysiCell_various_outputs.o PhysiCell_pugixml.o PhysiCell_settings.o
 
 # put your custom objects here (they should be in the custom_modules directory)
 
-PhysiCell_custom_module_OBJECTS := custom.o submodel_data_structures.o internal_viral_dynamics.o internal_viral_response.o receptor_dynamics.o immune_submodels.o epithelium_submodel.o
+PhysiCell_custom_module_OBJECTS := custom.o submodel_data_structures.o internal_viral_dynamics.o \
+internal_viral_response.o receptor_dynamics.o immune_submodels.o epithelium_submodel.o
 
 pugixml_OBJECTS := pugixml.o
 
 PhysiCell_OBJECTS := $(BioFVM_OBJECTS)  $(pugixml_OBJECTS) $(PhysiCell_core_OBJECTS) $(PhysiCell_module_OBJECTS)
 ALL_OBJECTS := $(PhysiCell_OBJECTS) $(PhysiCell_custom_module_OBJECTS)
 
-# compile the project 
-
-#all: main.cpp $(ALL_OBJECTS)
-#	$(COMPILE_COMMAND) -o $(PROGRAM_NAME) $(ALL_OBJECTS) main.cpp 
+# compile the project
 
 all: main.cpp $(ALL_OBJECTS)
 	@echo Your OS= $(OSFLAG)
 	@echo LIBRR_CFLAGS= $(LIBRR_CFLAGS)
 	@echo LIBRR_LIBS= $(LIBRR_LIBS)
-	@echo 
-#	$(COMPILE_COMMAND) -L$(LIBRR_LIBS) -lroadrunner_c_api $(PATH_TO_OMP) -lomp -o $(PROGRAM_NAME) $(ALL_OBJECTS) main.cpp
-#	$(COMPILE_COMMAND) -L$(LIBRR_LIBS) -lroadrunner_c_api $(OMP_LIB) -o $(PROGRAM_NAME) $(ALL_OBJECTS) main.cpp
+	@echo
 	$(COMPILE_COMMAND) $(OMP_LIB) -o $(PROGRAM_NAME) $(ALL_OBJECTS) main.cpp -L$(LIBRR_LIBS) -lroadrunner_c_api
 	@echo
 	@echo created $(PROGRAM_NAME)
 	@echo
 
 
-# PhysiCell core components	
+# PhysiCell core components
 
 PhysiCell_phenotype.o: ./core/PhysiCell_phenotype.cpp
 	$(COMPILE_COMMAND) -c ./core/PhysiCell_phenotype.cpp
-	
+
 PhysiCell_digital_cell_line.o: ./core/PhysiCell_digital_cell_line.cpp
 	$(COMPILE_COMMAND) -c ./core/PhysiCell_digital_cell_line.cpp
 
 PhysiCell_cell.o: ./core/PhysiCell_cell.cpp
-	$(COMPILE_COMMAND) -c ./core/PhysiCell_cell.cpp 
+	$(COMPILE_COMMAND) -c ./core/PhysiCell_cell.cpp
 
 PhysiCell_cell_container.o: ./core/PhysiCell_cell_container.cpp
-	$(COMPILE_COMMAND) -c ./core/PhysiCell_cell_container.cpp 
-	
+	$(COMPILE_COMMAND) -c ./core/PhysiCell_cell_container.cpp
+
 PhysiCell_standard_models.o: ./core/PhysiCell_standard_models.cpp
-	$(COMPILE_COMMAND) -c ./core/PhysiCell_standard_models.cpp 
-	
+	$(COMPILE_COMMAND) -c ./core/PhysiCell_standard_models.cpp
+
 PhysiCell_utilities.o: ./core/PhysiCell_utilities.cpp
-	$(COMPILE_COMMAND) -c ./core/PhysiCell_utilities.cpp 
-	
+	$(COMPILE_COMMAND) -c ./core/PhysiCell_utilities.cpp
+
 PhysiCell_custom.o: ./core/PhysiCell_custom.cpp
-	$(COMPILE_COMMAND) -c ./core/PhysiCell_custom.cpp 
-	
+	$(COMPILE_COMMAND) -c ./core/PhysiCell_custom.cpp
+
 PhysiCell_constants.o: ./core/PhysiCell_constants.cpp
-	$(COMPILE_COMMAND) -c ./core/PhysiCell_constants.cpp 
-	
+	$(COMPILE_COMMAND) -c ./core/PhysiCell_constants.cpp
+
 # BioFVM core components (needed by PhysiCell)
-	
+
 BioFVM_vector.o: ./BioFVM/BioFVM_vector.cpp
-	$(COMPILE_COMMAND) -c ./BioFVM/BioFVM_vector.cpp 
+	$(COMPILE_COMMAND) -c ./BioFVM/BioFVM_vector.cpp
 
 BioFVM_agent_container.o: ./BioFVM/BioFVM_agent_container.cpp
-	$(COMPILE_COMMAND) -c ./BioFVM/BioFVM_agent_container.cpp 
-	
+	$(COMPILE_COMMAND) -c ./BioFVM/BioFVM_agent_container.cpp
+
 BioFVM_mesh.o: ./BioFVM/BioFVM_mesh.cpp
-	$(COMPILE_COMMAND) -c ./BioFVM/BioFVM_mesh.cpp 
+	$(COMPILE_COMMAND) -c ./BioFVM/BioFVM_mesh.cpp
 
 BioFVM_microenvironment.o: ./BioFVM/BioFVM_microenvironment.cpp
-	$(COMPILE_COMMAND) -c ./BioFVM/BioFVM_microenvironment.cpp 
+	$(COMPILE_COMMAND) -c ./BioFVM/BioFVM_microenvironment.cpp
 
 BioFVM_solvers.o: ./BioFVM/BioFVM_solvers.cpp
-	$(COMPILE_COMMAND) -c ./BioFVM/BioFVM_solvers.cpp 
+	$(COMPILE_COMMAND) -c ./BioFVM/BioFVM_solvers.cpp
 
 BioFVM_utilities.o: ./BioFVM/BioFVM_utilities.cpp
-	$(COMPILE_COMMAND) -c ./BioFVM/BioFVM_utilities.cpp 
-	
+	$(COMPILE_COMMAND) -c ./BioFVM/BioFVM_utilities.cpp
+
 BioFVM_basic_agent.o: ./BioFVM/BioFVM_basic_agent.cpp
-	$(COMPILE_COMMAND) -c ./BioFVM/BioFVM_basic_agent.cpp 
-	
+	$(COMPILE_COMMAND) -c ./BioFVM/BioFVM_basic_agent.cpp
+
 BioFVM_matlab.o: ./BioFVM/BioFVM_matlab.cpp
 	$(COMPILE_COMMAND) -c ./BioFVM/BioFVM_matlab.cpp
 
 BioFVM_MultiCellDS.o: ./BioFVM/BioFVM_MultiCellDS.cpp
 	$(COMPILE_COMMAND) -c ./BioFVM/BioFVM_MultiCellDS.cpp
-	
+
 pugixml.o: ./BioFVM/pugixml.cpp
 	$(COMPILE_COMMAND) -c ./BioFVM/pugixml.cpp
-	
+
 # standard PhysiCell modules
 
 PhysiCell_SVG.o: ./modules/PhysiCell_SVG.cpp
@@ -209,10 +171,10 @@ PhysiCell_various_outputs.o: ./modules/PhysiCell_various_outputs.cpp
 
 PhysiCell_pugixml.o: ./modules/PhysiCell_pugixml.cpp
 	$(COMPILE_COMMAND) -c ./modules/PhysiCell_pugixml.cpp
-	
+
 PhysiCell_settings.o: ./modules/PhysiCell_settings.cpp
 	$(COMPILE_COMMAND) -c ./modules/PhysiCell_settings.cpp
-	
+
 # user-defined PhysiCell modules
 
 custom.o: ./custom_modules/custom.cpp ./intracellular/PhysiCell_intracellular.h
@@ -229,19 +191,19 @@ internal_viral_response.o: ./custom_modules/internal_viral_response.cpp
 
 receptor_dynamics.o: ./custom_modules/receptor_dynamics.cpp
 	$(COMPILE_COMMAND) -c ./custom_modules/receptor_dynamics.cpp
-	
+
 immune_submodels.o: ./custom_modules/immune_submodels.cpp
-	$(COMPILE_COMMAND) -c ./custom_modules/immune_submodels.cpp 
-	
+	$(COMPILE_COMMAND) -c ./custom_modules/immune_submodels.cpp
+
 epithelium_submodel.o: ./custom_modules/epithelium_submodel.cpp
-	$(COMPILE_COMMAND) -c ./custom_modules/epithelium_submodel.cpp 
+	$(COMPILE_COMMAND) -c ./custom_modules/epithelium_submodel.cpp
 
 # cleanup
-	
+
 clean:
 	rm -f *.o
 	rm -f $(PROGRAM_NAME)*
-	
+
 data-cleanup:
 	rm -f *.mat
 	rm -f *.xml
@@ -251,36 +213,34 @@ data-cleanup:
 	touch ./output/empty.txt
 
 reset:
-	cp ./config/PhysiCell_settings.xml-default ./config/PhysiCell_settings.xml 
-	
+	cp ./config/PhysiCell_settings.xml-default ./config/PhysiCell_settings.xml
+
 FOLDER := output
 FRAMERATE := 24
 movie:
-#	mencoder "mf://snapshot*.jpg" -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=10000:mbd=2:trell -mf fps=$(FRAMERATE):type=jpg -nosound -o out.avi	
-#	ffmpeg -i out.avi out.mp4 
 	ffmpeg -r $(FRAMERATE) -f image2 -i snapshot%08d.jpg -vcodec libx264 -pix_fmt yuv420p -strict -2 -tune animation -crf 15 -acodec aac out.mp4
-	#del snap*.jpg
-# archival 
-	
-checkpoint: 
-	zip -r $$(date +%b_%d_%Y_%H%M).zip Makefile *.cpp *.h config/*.xml custom_modules/* 
-	
+
+# archival
+
+checkpoint:
+	zip -r $$(date +%b_%d_%Y_%H%M).zip Makefile *.cpp *.h config/*.xml custom_modules/*
+
 zip:
-	zip -r latest.zip Makefile* *.cpp *.h BioFVM/* config/* core/* custom_modules/* matlab/* modules/* sample_projects/* 
+	zip -r latest.zip Makefile* *.cpp *.h BioFVM/* config/* core/* custom_modules/* matlab/* modules/* sample_projects/*
 	cp latest.zip $$(date +%b_%d_%Y_%H%M).zip
-	cp latest.zip VERSION_$(VERSION).zip 
+	cp latest.zip VERSION_$(VERSION).zip
 	mv *.zip archives/
-	
+
 tar:
-	tar --ignore-failed-read -czf latest.tar Makefile* *.cpp *.h BioFVM/* config/* core/* custom_modules/* matlab/* modules/* sample_projects/* 
+	tar --ignore-failed-read -czf latest.tar Makefile* *.cpp *.h BioFVM/* config/* core/* custom_modules/* matlab/* modules/* sample_projects/*
 	cp latest.tar $$(date +%b_%d_%Y_%H%M).tar
 	cp latest.tar VERSION_$(VERSION).tar
 	mv *.tar archives/
 
-unzip: 
-	cp ./archives/latest.zip . 
-	unzip latest.zip 
-	
-untar: 
+unzip:
+	cp ./archives/latest.zip .
+	unzip latest.zip
+
+untar:
 	cp ./archives/latest.tar .
 	tar -xzf latest.tar
