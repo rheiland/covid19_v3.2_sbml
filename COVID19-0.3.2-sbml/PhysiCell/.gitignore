@@ -3,3 +3,6 @@
 unit-test-conservation.exe
 Makefile-backup
 *.exe
+output
+COVID19_sbml
+COVID19_sbml.dSYM

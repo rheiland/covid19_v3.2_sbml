@@ -21,7 +21,7 @@ CFLAGS := -fomit-frame-pointer -m64 -std=c++11 -D LIBROADRUNNER
 # OSX
 BREW_HOME := $(HOME)/brew
 OMP_INCLUDE := -I $(BREW_HOME)/include
-PATH_TO_OMP := -L/opt/local/lib/libomp
+PATH_TO_OMP := -L$(shell brew --prefix libomp)/lib
 OMP_LIB := $(PATH_TO_OMP) -lomp
 
 LIBRR_DIR := $(HOME)/libroadrunner/roadrunner-osx-10.9-cp36m

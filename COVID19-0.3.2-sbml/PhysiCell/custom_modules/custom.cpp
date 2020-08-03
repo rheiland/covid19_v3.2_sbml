@@ -67,9 +67,11 @@
 
 #include "./custom.h"
 
-int oxygen_substrate_idx; 
-int glucose_substrate_idx; 
-int energy_cell_idx; 
+int oxygen_microenv_idx;
+int glucose_microenv_idx;
+int oxygen_sbml_species_idx;
+int glucose_sbml_species_idx;
+int energy_cell_idx;
 int ingest_oxy_cell_idx;
 int ingest_glu_cell_idx;
 
@@ -104,7 +106,8 @@ void create_cell_types( void )
 	initialize_cell_definitions_from_pugixml(); 
 
 	// SBML-related
-	energy_cell_idx = cell_defaults.custom_data.find_variable_index( "energy" ); 
+	energy_cell_idx = cell_defaults.custom_data.find_variable_index( "energy" );
+
 	// energy_cell_idx = cell_defaults->custom_data.find_variable_index( name );
 	// energy_cell_idx = pCD->custom_data.find_variable_index( name );
 	std::cout << "\n\n-------- create_cell_types():  energy_cell_idx = " << energy_cell_idx << std::endl;
@@ -156,6 +159,13 @@ void create_cell_types( void )
 	// 	getchar ();
 	// 	exit (0);
 	}
+        rrc::RRStringArrayPtr ids = rrc::getFloatingSpeciesIds(rrHandle);
+        if (ids == NULL) {
+          std::cerr << "NULL" << std::endl;
+        }
+        std::cout << "debug: A" << std::endl;
+        glucose_sbml_species_idx = find_species_id_index_or_die(ids, "Glucose");
+        oxygen_sbml_species_idx = find_species_id_index_or_die(ids, "Oxygen");
 #endif // LIBROADRUNNER
 	
 	return; 
@@ -203,11 +213,11 @@ void setup_microenvironment( void )
 	initialize_microenvironment(); 	
 
 	// used by SBML model
-	oxygen_substrate_idx = microenvironment.find_density_index( "oxygen" ); 
-	glucose_substrate_idx = microenvironment.find_density_index( "glucose" ); 
+	oxygen_microenv_idx = microenvironment.find_density_index( "oxygen" ); 
+	glucose_microenv_idx = microenvironment.find_density_index( "glucose" ); 
 	std::cout << "---------- setup_microenvironment() -----------\n";
-	std::cout << "    oxygen_substrate_idx = " << oxygen_substrate_idx << std::endl;
-	std::cout << "    glucose_substrate_idx = " << glucose_substrate_idx << std::endl;
+	std::cout << "    oxygen_microenv_idx = " << oxygen_microenv_idx << std::endl;
+	std::cout << "    glucose_microenv_idx = " << glucose_microenv_idx << std::endl;
 	
 	return; 
 }
@@ -779,4 +789,18 @@ void SVG_plot_virus( std::string filename , Microenvironment& M, double z_slice 
 	os.close();
  
 	return; 
+}
+
+int find_species_id_index_or_die(rrc::RRStringArrayPtr ids, std::string species_name)
+{
+        std::cout << "debug: find_species_id_index_or_die: in" << std::endl;
+        for (int i = 0; i < ids->Count; i++) {
+          std::cout << "debug: find_species_id_index_or_die: for: " << i << std::endl;
+          if (species_name == ids->String[i]) {
+            std::cout << "debug: find_species_id_index_or_die: returning: " << i << std::endl;
+            return i;
+          }
+        }
+        std::cerr << "Could not find id in species: " << species_name << std::endl;
+        exit(1);
 }
