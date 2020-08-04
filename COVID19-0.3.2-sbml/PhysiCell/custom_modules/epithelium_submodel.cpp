@@ -1,13 +1,17 @@
 #include "./epithelium_submodel.h"
 #include <iomanip>
 
-using namespace PhysiCell; 
+using namespace PhysiCell;
 
-std::string epithelium_submodel_version = "0.1.0"; 
+std::string epithelium_submodel_version = "0.1.0";
 
-Submodel_Information epithelium_submodel_info; 
+Submodel_Information epithelium_submodel_info;
 
-extern int energy_cell_idx; 
+extern int energy_cell_idx;
+extern int glucose_microenv_idx;
+extern int oxygen_microenv_idx;
+extern int glucose_sbml_species_idx;
+extern int oxygen_sbml_species_idx;
 
 void epithelium_contact_function( Cell* pC1, Phenotype& p1, Cell* pC2, Phenotype& p2, double dt )
 {
@@ -16,30 +20,10 @@ void epithelium_contact_function( Cell* pC1, Phenotype& p1, Cell* pC2, Phenotype
 	return;
 }
 
-int find_species_id_index_or_die(rrc::RRStringArrayPtr ids, const char* id)
-{
-        for (int i = 0; i < ids->Count; ++i) {
-          if (strcmp(id, ids->String[i]) == 0) {
-            printf("id of %s is%i \n", id, i);
-            return i;
-          }
-        }
-        std::cerr << "Could not find id in species: " << id << std::endl;
-        exit(1);
-}
-
 void energy_based_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt)
 {
-        rrc::RRStringArrayPtr ids = rrc::getFloatingSpeciesIds(pCell->phenotype.molecular.model_rr);
-        static int idx_glucose = (find_species_id_index_or_die(ids, "Glucose"));
-        static int idx_oxygen = (find_species_id_index_or_die(ids, "Oxygen"));
-
 	if (pCell->type != 1)
 		return;
-
-	// PhysiCell substrate indices
-	static int oxygen_index = microenvironment.find_density_index( "oxygen");
-	static int glucose_index = microenvironment.find_density_index( "glucose");
 
 	std::cout << "------ energy_based_cell_phenotype() ------" << std::endl;
 
@@ -63,13 +47,13 @@ void energy_based_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt)
 		std::cout << idx << ", " << vptr->Data[idx] << std::endl;
 
 	int vi = microenvironment.nearest_voxel_index(pCell->position);
-	double oxy_val = microenvironment(vi)[oxygen_index];
-	double glucose_val = microenvironment(vi)[glucose_index];
+	double oxy_val = microenvironment(vi)[oxygen_microenv_idx];
+	double glucose_val = microenvironment(vi)[glucose_microenv_idx];
 	std::cout << "oxy_val at voxel of cell = " << oxy_val << std::endl;
 	std::cout << "glucose_val at voxel of cell = " << glucose_val << std::endl;
 
-	vptr->Data[idx_oxygen] = oxy_val;
-	vptr->Data[idx_glucose] = glucose_val;
+	vptr->Data[oxygen_microenv_idx] = oxy_val;
+	vptr->Data[glucose_microenv_idx] = glucose_val;
 	rrc::setFloatingSpeciesConcentrations(pCell->phenotype.molecular.model_rr, vptr);
 
 	result = rrc::simulateEx (pCell->phenotype.molecular.model_rr, 0, 10, 10);  // start time, end time, and number of points
