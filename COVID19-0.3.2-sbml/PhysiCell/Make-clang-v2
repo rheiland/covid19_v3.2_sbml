@@ -41,9 +41,6 @@ else
 		OMP_LIB :=
 	endif
 	ifeq ($(UNAME_S),Darwin)
-	        # g++ doesn't need options for OpenMP. clang does.  clang is sometimes
-	        # aliased as g++, so the name itself is not sufficient to check.
-	        # If clang, assumes a brew install to check for libomp install path.
 	        CC_TEST_OUTPUT := $(shell $(CC) --version 2>&1 | grep -o clang)
                 ifeq ($(CC_TEST_OUTPUT),clang)
 	            BREW_HOME := $(HOME)/brew
