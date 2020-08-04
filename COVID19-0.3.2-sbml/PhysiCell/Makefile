@@ -18,12 +18,6 @@ CFLAGS := -fomit-frame-pointer -m64 -std=c++11 -D LIBROADRUNNER
 #   -O3
 #   -g
 
-# OSX
-BREW_HOME := $(HOME)/brew
-OMP_INCLUDE := -I $(BREW_HOME)/include
-PATH_TO_OMP := -L$(shell brew --prefix libomp)/lib
-OMP_LIB := $(PATH_TO_OMP) -lomp
-
 LIBRR_DIR := $(HOME)/libroadrunner/roadrunner-osx-10.9-cp36m
 LIBRR_LIBS := $(HOME)/libroadrunner/roadrunner-osx-10.9-cp36m/lib
 LIBRR_CFLAGS := -I${LIBRR_DIR}/include/rr/C
@@ -47,6 +41,17 @@ else
 		OMP_LIB :=
 	endif
 	ifeq ($(UNAME_S),Darwin)
+	        # g++ doesn't need options for OpenMP. clang does.  clang is sometimes
+	        # aliased as g++, so the name itself is not sufficient to check.
+	        # If clang, assumes a brew install to check for libomp install path.
+	        CC_TEST_OUTPUT := $(shell $(CC) --version 2>&1 | grep -o clang)
+                ifeq ($(CC_TEST_OUTPUT),clang)
+	            BREW_HOME := $(HOME)/brew
+		    OMP_INCLUDE := -I $(BREW_HOME)/include
+		    PATH_TO_OMP := -L$(shell brew --prefix libomp)/lib
+		    OMP_LIB := $(PATH_TO_OMP) -lomp
+                    CFLAGS := $(CFLAGS) $(OMP_LIB)
+                endif
 		OSFLAG += -D OSX
 	        CFLAGS := $(CFLAGS) -Xpreprocessor -fopenmp
 	endif
